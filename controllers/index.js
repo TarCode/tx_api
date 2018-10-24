@@ -1,8 +1,13 @@
 import mongoose from 'mongoose'
+import passport from 'passport'
 import { Account, Transaction, User, Company } from '../models'
 
 export const registerCompany = async (req, res, next) => {
-  const { body: { user } } = req;
+  const user = {
+    email: req.body.email,
+    company: req.body.company,
+    password: req.body.password
+  }
 
   if(!user.email) {
     return res.status(422).json({
@@ -27,27 +32,38 @@ export const registerCompany = async (req, res, next) => {
       },
     });
   }
+  try {
+    const company = await Company.findOne({ name: user.company });
+    if (!company) {
+      const created_company = await Company.create({ name: user.company, owner: user.email });
+      
+      const finalUser = await new User(user);
+      
+      finalUser.setPassword(user.password);
+    
+      await finalUser.save()
 
-  const company = await Company.find({ name: user.company });
-
-  if (company) {
+      return res.json({ user: finalUser.toAuthJSON(), company: created_company })
+    } else {
+      return res.send({
+        status: 'error',
+        msg: "Company already exists"
+      })
+    }
+  } catch (error) {
     return res.send({
       status: 'error',
-      msg: "Company already exists"
+      msg: error.message
     })
-  } else {
-    const finalUser = new User(user);
-
-    finalUser.setPassword(user.password);
-
-    await finalUser.save()
-
-    return res.json({ user: finalUser.toAuthJSON() })
   }
 }
 
 export const register = async (req, res, next) => {
-  const { body: { user } } = req;
+  const user = {
+    email: req.body.email,
+    company: req.body.company,
+    password: req.body.password
+  }
 
   if(!user.email) {
     return res.status(422).json({
@@ -92,7 +108,11 @@ export const register = async (req, res, next) => {
 }
 
 export const login = (req, res, next) => {
-  const { body: { user } } = req;
+  const user = {
+    email: req.body.email,
+    company: req.body.company,
+    password: req.body.password
+  }
 
   if(!user.email) {
     return res.status(422).json({
@@ -123,6 +143,9 @@ export const login = (req, res, next) => {
       return next(err);
     }
 
+    console.log("PASSPORT USERRRR", err, passportUser);
+    
+
     if(passportUser) {
       const user = passportUser;
       user.token = passportUser.generateJWT();
@@ -130,7 +153,10 @@ export const login = (req, res, next) => {
       return res.json({ user: user.toAuthJSON() });
     }
 
-    return status(400).info;
+    return res.status(400).send({
+      status: 'error',
+      message: info
+    });
   })(req, res, next);
 }
 

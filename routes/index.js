@@ -20,9 +20,12 @@ const uri = 'mongodb://localhost:27017,localhost:27018,localhost:27019/txn';
 
 mongoose.connect(uri, { replicaSet: 'rs', useNewUrlParser: true  });
 
+// mongoose.connection.dropDatabase();
+
+import '../models'
 import '../config/passport'
 
-// mongoose.connection.dropDatabase();
+
 // public methods
 app.post('/auth/company/register', auth.optional, registerCompany);
 app.post('/auth/register', auth.optional, register);

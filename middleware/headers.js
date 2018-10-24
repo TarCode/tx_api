@@ -4,6 +4,7 @@ import cors from 'cors'
 import path from 'path'
 import session from 'express-session'
 import errorHandler from 'errorhandler'
+import passport from 'passport'
 
 const app = express()
 const isProduction = process.env.NODE_ENV === 'production';
@@ -12,6 +13,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 app.use(cors())
 app.use(bodyParser.json());
+app.use(passport.initialize());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({ secret: 'passport-tx', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false }));
