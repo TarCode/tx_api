@@ -15,7 +15,8 @@
     "http": "0.0.0",
     "mongodb": "^3.1.8",
     "mongoose": "^5.2.18",
-    "socket.io": "^2.1.1"
+    "socket.io": "^2.1.1",
+    "swagger-ui-express": "^4.0.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

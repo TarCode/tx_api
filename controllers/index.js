@@ -17,8 +17,9 @@ export const getAccounts = async (req, res) => {
 }
 
 export const createAccount = async (req, res) => {
+  const { name } = req.body
   try {
-      const account = await Account.create([{ name: 'A', balance: 15 }, { name: 'B', balance: 20 }]);
+      const account = await Account.create({ name, balance: 0 });
       return res.send({
         status: 'success',
         data: account
@@ -47,7 +48,7 @@ export const getTransactions = async (req, res) => {
 }
 
 export const createTransfer = async (req, res) => {
-  const { from, to, amount } = req.body
+    const { from, to, amount } = req.body
     try {
       // Fails because then A would have a negative balance
       const tx = await transfer(from, to, amount);
@@ -81,9 +82,12 @@ const transfer = async (from, to, amount) => {
       const B = await Account.
         findOneAndUpdate({ name: to }, { $inc: { balance: amount } }, opts);
   
+      const tx = await Transaction.
+      create({ from, to, amount, created: new Date() })
+
       await session.commitTransaction();
       session.endSession();
-      return { from: A, to: B };
+      return tx;
     } catch (error) {
       // If an error occurred, abort the whole transaction and
       // undo any changes that might have happened

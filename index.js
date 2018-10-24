@@ -6,6 +6,9 @@ import socketio from 'socket.io'
 import routes from './routes'
 import headers from './middleware/headers'
 
+var swaggerUi = require('swagger-ui-express'),
+    swaggerDocument = require('./swagger.json');
+
 const app = express()
 
 const server = http.createServer(app)
@@ -21,7 +24,11 @@ app.get('/', (req, res) => {
 
 app.use(headers)
 
-app.use('/api', routes)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.use('/api', routes);
+
+
 
 // Websocket logic for live data
 io.on("connection", function(socket) {
