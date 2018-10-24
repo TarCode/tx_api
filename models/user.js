@@ -28,6 +28,7 @@ UsersSchema.methods.generateJWT = () => {
 
   return jwt.sign({
     email: this.email,
+    company: this.company,
     id: this._id,
     exp: parseInt(expirationDate.getTime() / 1000, 10),
   }, 'secret');
@@ -37,6 +38,7 @@ UsersSchema.methods.toAuthJSON = () => {
   return {
     _id: this._id,
     email: this.email,
+    company: this.company,
     token: this.generateJWT(),
   };
 };

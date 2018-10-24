@@ -6,9 +6,10 @@ import { Users } from '../models'
 
 passport.use(new LocalStrategy({
   usernameField: 'user[email]',
+  companyField: 'user[company]',
   passwordField: 'user[password]',
-}, (email, password, done) => {
-  Users.findOne({ email })
+}, (email, company, password, done) => {
+  Users.findOne({ email, company })
     .then((user) => {
       if(!user || !user.validatePassword(password)) {
         return done(null, false, { errors: { 'email or password': 'is invalid' } });

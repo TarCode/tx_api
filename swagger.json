@@ -143,6 +143,46 @@
 
     },
     "definitions": {
+        "RegisterUser": {
+            "required": [
+                "email",
+                "company",
+                "password",
+                "confirm_password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "company": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "confirm_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "LoginUser": {
+            "required": [
+                "email",
+                "company",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "company": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
       "Account": {
         "required": [
           "name"

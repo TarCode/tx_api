@@ -1,13 +1,21 @@
 import mongoose from 'mongoose'
-import { Account, Transaction, User } from '../models'
+import { Account, Transaction, User, Company } from '../models'
 
-export const register = (req, res, next) => {
+export const registerCompany = async (req, res, next) => {
   const { body: { user } } = req;
 
   if(!user.email) {
     return res.status(422).json({
       errors: {
         email: 'is required',
+      },
+    });
+  }
+
+  if(!user.company) {
+    return res.status(422).json({
+      errors: {
+        company: 'is required',
       },
     });
   }
@@ -20,12 +28,67 @@ export const register = (req, res, next) => {
     });
   }
 
-  const finalUser = new User(user);
+  const company = await Company.find({ name: user.company });
 
-  finalUser.setPassword(user.password);
+  if (company) {
+    return res.send({
+      status: 'error',
+      msg: "Company already exists"
+    })
+  } else {
+    const finalUser = new User(user);
 
-  return finalUser.save()
-    .then(() => res.json({ user: finalUser.toAuthJSON() }));
+    finalUser.setPassword(user.password);
+
+    await finalUser.save()
+
+    return res.json({ user: finalUser.toAuthJSON() })
+  }
+}
+
+export const register = async (req, res, next) => {
+  const { body: { user } } = req;
+
+  if(!user.email) {
+    return res.status(422).json({
+      errors: {
+        email: 'is required',
+      },
+    });
+  }
+
+  if(!user.company) {
+    return res.status(422).json({
+      errors: {
+        company: 'is required',
+      },
+    });
+  }
+
+  if(!user.password) {
+    return res.status(422).json({
+      errors: {
+        password: 'is required',
+      },
+    });
+  }
+
+  const company = await Company.find({ name: user.company });
+
+  if (company) {
+    const finalUser = new User(user);
+
+    finalUser.setPassword(user.password);
+
+    const savedUser = await finalUser.save()
+
+    return res.json({ user: finalUser.toAuthJSON() })
+  } else {
+      return res.send({
+        status: 'error',
+        msg: "Company does not exist"
+      })
+  }
 }
 
 export const login = (req, res, next) => {
@@ -35,6 +98,14 @@ export const login = (req, res, next) => {
     return res.status(422).json({
       errors: {
         email: 'is required',
+      },
+    });
+  }
+
+  if(!user.company) {
+    return res.status(422).json({
+      errors: {
+        company: 'is required',
       },
     });
   }
@@ -67,14 +138,14 @@ export const currentUser = (req, res, next) => {
   const { payload: { id } } = req;
   
   return User.findById(id)
-      .then((user) => {
-      if(!user) {
-          return res.sendStatus(400);
-      }
-  
-      return res.json({ user: user.toAuthJSON() });
-      });
-  }
+    .then((user) => {
+    if(!user) {
+        return res.sendStatus(400);
+    }
+
+    return res.json({ user: user.toAuthJSON() });
+    });
+}
 
 export const getAccounts = async (req, res) => {
   try {
