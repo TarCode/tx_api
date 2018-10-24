@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { Account } from '../schemas'
+import { Account, Transaction } from '../schemas'
 
 export const getAccounts = async (req, res) => {
   try {
@@ -18,7 +18,7 @@ export const getAccounts = async (req, res) => {
 
 export const createAccount = async (req, res) => {
   try {
-      const account = await Account.create([{ name: 'C', balance: 15 }, { name: 'D', balance: 20 }]);
+      const account = await Account.create([{ name: 'A', balance: 15 }, { name: 'B', balance: 20 }]);
       return res.send({
         status: 'success',
         data: account
@@ -31,14 +31,29 @@ export const createAccount = async (req, res) => {
   }
 }
 
+export const getTransactions = async (req, res) => {
+  try {
+    const transactions = await Transaction.find();
+    return res.send({
+      status: 'success',
+      data: transactions
+    })
+  } catch (error) {
+    return res.send({
+      status: 'error',
+      msg: error.message
+    })
+  }  
+}
+
 export const createTransfer = async (req, res) => {
   const { from, to, amount } = req.body
     try {
       // Fails because then A would have a negative balance
-      const transfer = await transfer(from, to, amount);
+      const tx = await transfer(from, to, amount);
       return res.send({
         status: 'success',
-        data: transfer
+        data: tx
       })
     } catch (error) {
       return res.send({

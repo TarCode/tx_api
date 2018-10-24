@@ -1,7 +1,7 @@
 import express from 'express'
 import mongoose from 'mongoose'
 
-import { getAccounts, createAccount, createTransfer } from '../actions'
+import { getAccounts, createAccount, getTransactions, createTransfer } from '../actions'
 
 const app = express()
 
@@ -14,6 +14,8 @@ mongoose.connect(uri, { replicaSet: 'rs', useNewUrlParser: true  });
 app.get('/accounts', getAccounts)
   
 app.get('/accounts/create', createAccount)
+
+app.get('/transactions', getTransactions)
 
 app.post('/transfer', createTransfer)
 
