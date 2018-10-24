@@ -1,12 +1,16 @@
 import express from 'express'
 import mongoose from 'mongoose'
+import auth from './auth'
 
 import { 
     getAccounts, 
     createAccount, 
     getTransactions,
     createDebit,
-    createCredit
+    createCredit,
+    register,
+    login,
+    currentUser
 } from '../controllers'
 
 const app = express()
@@ -15,13 +19,22 @@ const uri = 'mongodb://localhost:27017,localhost:27018,localhost:27019/txn';
 
 mongoose.connect(uri, { replicaSet: 'rs', useNewUrlParser: true  });
 
-mongoose.connection.dropDatabase();
+import '../config/passport'
 
-app.get('/accounts', getAccounts)
-app.post('/accounts', createAccount)
+// mongoose.connection.dropDatabase();
+// public methods
+app.post('/register', auth.optional, register);
+app.post('/login', auth.optional, login);
+  
+// protected methods
+app.get('/current', auth.required, currentUser);
 
-app.get('/transactions', getTransactions)
-app.post('/transactions/debit', createDebit)
-app.post('/transactions/credit', createCredit)
+app.get('/accounts', auth.required, getAccounts)
+app.post('/accounts', auth.required, createAccount)
+
+app.get('/transactions', auth.required, getTransactions)
+app.post('/transactions/debit', auth.required, createDebit)
+app.post('/transactions/credit', auth.required, createCredit)
+
 
 module.exports = app;
