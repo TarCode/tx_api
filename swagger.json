@@ -11,12 +11,6 @@
     },
     "host": "localhost:3000",
     "basePath": "/api/",
-    "tags": [
-      {
-        "name": "Accounts",
-        "description": "Get list of accounts"
-      }
-    ],
     "schemes": [
       "http"
     ],
@@ -70,7 +64,54 @@
               }
             }
           }
+      },
+
+      "/transactions": {
+        "get": {
+          "tags": [
+            "Transactions"
+          ],
+          "summary": "Transactions in system",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "schema": {
+                "$ref": "#/definitions/Transactions"
+              }
+            }
+          }
+        }
+      },
+      "/transactions/send": {
+        "post": {
+            "tags": [
+              "Transactions"
+            ],
+            "description": "Create new transaction in system",
+            "parameters": [
+              {
+                "name": "transaction",
+                "in": "body",
+                "description": "Transaction that we want to create",
+                "schema": {
+                  "$ref": "#/definitions/Transaction"
+                }
+              }
+            ],
+            "produces": [
+              "application/json"
+            ],
+            "responses": {
+              "200": {
+                "description": "New transaction is created",
+                "schema": {
+                  "$ref": "#/definitions/Transaction"
+                }
+              }
+            }
+          }
       }
+
     },
     "definitions": {
       "Account": {
@@ -78,15 +119,29 @@
           "name"
         ],
         "properties": {
-          "_id": {
-            "type": "string",
-            "uniqueItems": true
-          },
           "name": {
             "type": "string",
             "uniqueItems": true
           },
           "balance": {
+            "type": "number"
+          }
+        }
+      },
+      "Transaction": {
+        "required": [
+          "from",
+          "to",
+          "amount"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "amount": {
             "type": "number"
           }
         }
