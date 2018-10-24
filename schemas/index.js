@@ -11,8 +11,10 @@ export const Account =  mongoose.model(
 export const Transaction = mongoose.model(
     'Transaction', 
     new mongoose.Schema({
-        from: String, 
-        to: String,
+        account: String, 
+        source_account: String,
+        destination_account: String,
+        type: String,
         amount: Number,
         created: Date
     })

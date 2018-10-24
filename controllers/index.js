@@ -47,11 +47,11 @@ export const getTransactions = async (req, res) => {
   }  
 }
 
-export const createTransfer = async (req, res) => {
-    const { from, to, amount } = req.body
+export const createCredit = async (req, res) => {
+    const { account, amount } = req.body
     try {
-      // Fails because then A would have a negative balance
-      const tx = await transfer(from, to, amount);
+      const tx = await credit(account, amount);
+      
       return res.send({
         status: 'success',
         data: tx
@@ -63,6 +63,40 @@ export const createTransfer = async (req, res) => {
       });
     }
 }
+
+export const createDebit = async (req, res) => {
+  const { account, amount } = req.body
+  try {
+    // Fails because then A would have a negative balance
+    const tx = await debit(account, amount);
+    return res.send({
+      status: 'success',
+      data: tx
+    })
+  } catch (error) {
+    return res.send({
+      status: 'error',
+      msg: error.message
+    });
+  }
+}
+
+// export const createTransfer = async (req, res) => {
+//   const { from, to, amount } = req.body
+//   try {
+//     // Fails because then A would have a negative balance
+//     const tx = await transfer(from, to, amount);
+//     return res.send({
+//       status: 'success',
+//       data: tx
+//     })
+//   } catch (error) {
+//     return res.send({
+//       status: 'error',
+//       msg: error.message
+//     });
+//   }
+// }
 
 
 // The actual transfer logic
@@ -96,3 +130,42 @@ const transfer = async (from, to, amount) => {
       throw error; // Rethrow so calling function sees error
     }
   }
+
+  const debit = async (account, amount) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const opts = { session, new: true };
+      const A = await Account.
+        findOneAndUpdate({ name: account }, { $inc: { balance: -amount } }, opts);
+      if (A.balance < 0) {
+        // If A would have negative balance, fail and abort the transaction
+        // `session.abortTransaction()` will undo the above `findOneAndUpdate()`
+        throw new Error('Insufficient funds: ' + (A.balance + amount));
+      }
+  
+      const tx = await Transaction.
+      create({ account: account, type: 'debit', amount, created: new Date() }, opts)
+
+      await session.commitTransaction();
+      session.endSession();
+      return tx;
+    } catch (error) {
+      // If an error occurred, abort the whole transaction and
+      // undo any changes that might have happened
+      await session.abortTransaction();
+      session.endSession();
+      throw error; // Rethrow so calling function sees error
+    }
+  }
+
+const credit = async (account, amount) => {
+    const A = await Account.
+      findOneAndUpdate({ name: account }, { $inc: { balance: amount } });
+      
+      const tx = await Transaction.
+      create({ account: account, type: 'credit', amount, created: new Date() })
+      
+      console.log("IM GETTING TO THIS POINT", tx);
+    return tx;
+}

@@ -82,12 +82,41 @@
           }
         }
       },
-      "/transactions/send": {
+      "/transactions/credit": {
         "post": {
             "tags": [
               "Transactions"
             ],
-            "description": "Create new transaction in system",
+            "description": "Create new credit transaction in system",
+            "parameters": [
+              {
+                "name": "transaction",
+                "in": "body",
+                "description": "Transaction that we want to create",
+                "schema": {
+                  "$ref": "#/definitions/Transaction"
+                }
+              }
+            ],
+            "produces": [
+              "application/json"
+            ],
+            "responses": {
+              "200": {
+                "description": "New transaction is created",
+                "schema": {
+                  "$ref": "#/definitions/Transaction"
+                }
+              }
+            }
+          }
+      },
+      "/transactions/debit": {
+        "post": {
+            "tags": [
+              "Transactions"
+            ],
+            "description": "Create new debit transaction in system",
             "parameters": [
               {
                 "name": "transaction",
@@ -130,15 +159,11 @@
       },
       "Transaction": {
         "required": [
-          "from",
-          "to",
+          "account",
           "amount"
         ],
         "properties": {
-          "from": {
-            "type": "string"
-          },
-          "to": {
+          "account": {
             "type": "string"
           },
           "amount": {
