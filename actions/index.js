@@ -31,9 +31,26 @@ export const createAccount = async (req, res) => {
   }
 }
 
+export const createTransfer = async (req, res) => {
+  const { from, to, amount } = req.body
+    try {
+      // Fails because then A would have a negative balance
+      const transfer = await transfer(from, to, amount);
+      return res.send({
+        status: 'success',
+        data: transfer
+      })
+    } catch (error) {
+      return res.send({
+        status: 'error',
+        msg: error.message
+      });
+    }
+}
+
 
 // The actual transfer logic
-export const transfer = async (from, to, amount) => {
+const transfer = async (from, to, amount) => {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
