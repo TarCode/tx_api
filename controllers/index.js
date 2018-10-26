@@ -175,7 +175,9 @@ export const currentUser = (req, res, next) => {
 
 export const getAccounts = async (req, res) => {
   try {
-    const accounts = await Account.find();
+    const accounts = await Account.find({
+      company: req.payload.company
+    });
     return res.send({
       status: 'success',
       data: accounts
@@ -190,8 +192,15 @@ export const getAccounts = async (req, res) => {
 
 export const createAccount = async (req, res) => {
   const { name } = req.body
+  const { id, company } = req.payload
   try {
-      const account = await Account.create({ name, balance: 0 });
+      const account = await Account.create({
+         name, 
+         user_id: id, 
+         company, 
+         balance: 0 
+      });
+
       return res.send({
         status: 'success',
         data: account

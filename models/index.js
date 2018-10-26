@@ -15,6 +15,7 @@ export const Account =  mongoose.model(
     'Account', 
     new mongoose.Schema({
         user_id: String,
+        company: String,
         name: String, 
         balance: Number
     })
