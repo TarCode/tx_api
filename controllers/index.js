@@ -89,22 +89,31 @@ export const register = async (req, res) => {
     });
   }
 
-  const company = await Company.find({ name: user.company });
+  const company = await Company.findOne({ name: user.company });
 
-  if (company) {
-    const finalUser = new User(user);
-
-    finalUser.setPassword(user.password);
-
-    const savedUser = await finalUser.save()
-
-    return res.json({ user: finalUser.toAuthJSON() })
-  } else {
-      return res.send({
-        status: 'error',
-        msg: "Company does not exist"
-      })
+  const found_user = await User.findOne({ email: user.email, company: user.company })
+  
+  if (!company) {
+    return res.send({
+      status: 'error',
+      msg: "Company does not exist"
+    })
   }
+
+  if (found_user) {
+    return res.send({
+      status: 'error',
+      msg: "User already exists"
+    })
+  }
+
+  const finalUser = new User(user);
+
+  finalUser.setPassword(user.password);
+
+  const savedUser = await finalUser.save()
+
+  return res.json({ user: finalUser.toAuthJSON() })
 }
 
 export const login = (req, res, next) => {
