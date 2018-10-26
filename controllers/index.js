@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 import passport from 'passport'
 import { Account, Transaction, User, Company } from '../models'
 
-export const registerCompany = async (req, res, next) => {
+export const registerCompany = async (req, res) => {
   const user = {
     email: req.body.email,
     company: req.body.company,
@@ -58,7 +58,7 @@ export const registerCompany = async (req, res, next) => {
   }
 }
 
-export const register = async (req, res, next) => {
+export const register = async (req, res) => {
   const user = {
     email: req.body.email,
     company: req.body.company,
@@ -160,7 +160,7 @@ export const login = (req, res, next) => {
   })(req, res, next);
 }
 
-export const currentUser = async (req, res, next) => {
+export const currentUser = async (req, res) => {
   const { payload: { id } } = req;
   
   const user = await User.findById(id);
@@ -193,17 +193,26 @@ export const createAccount = async (req, res) => {
   const { name } = req.body
   const { id, company } = req.payload
   try {
-      const account = await Account.create({
-         name, 
-         user_id: id, 
-         company, 
-         balance: 0 
-      });
+      const found_account = await Account.findOne({ name, company })
 
-      return res.send({
-        status: 'success',
-        data: account
-      })
+      if (found_account) {
+        return res.send({
+          status: 'error',
+          msg: 'An account with this name already exists.'
+        });
+      } else {
+        const account = await Account.create({
+          name, 
+          user_id: id, 
+          company, 
+          balance: 0 
+       });
+ 
+       return res.send({
+         status: 'success',
+         data: account
+       })
+      }
   } catch (error) {
       return res.send({
         status: 'error',
