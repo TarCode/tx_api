@@ -6,7 +6,7 @@ export const User = UserModel
 export const Company =  mongoose.model(
     'Company', 
     new mongoose.Schema({
-        name: String, 
+        name: {type: String, lowercase: true, unique: true }, 
         owner: String
     })
 );
@@ -25,6 +25,7 @@ export const Transaction = mongoose.model(
     'Transaction', 
     new mongoose.Schema({
         account: String, 
+        company: String,
         source_account: String,
         destination_account: String,
         type: String,

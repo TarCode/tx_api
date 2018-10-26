@@ -160,17 +160,16 @@ export const login = (req, res, next) => {
   })(req, res, next);
 }
 
-export const currentUser = (req, res, next) => {
+export const currentUser = async (req, res, next) => {
   const { payload: { id } } = req;
   
-  return User.findById(id)
-    .then((user) => {
-    if(!user) {
-        return res.sendStatus(400);
-    }
+  const user = await User.findById(id);
+  
+  if(!user) {
+      return res.sendStatus(400);
+  }
 
-    return res.json({ user: user.toAuthJSON() });
-    });
+  return res.json({ user: user.toAuthJSON() });
 }
 
 export const getAccounts = async (req, res) => {

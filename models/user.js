@@ -5,8 +5,8 @@ import jwt from 'jsonwebtoken'
 const { Schema } = mongoose;
 
 const UsersSchema = new Schema({
-  email: String,
-  company: String,
+  email: {type: String, lowercase: true },
+  company: {type: String, lowercase: true },
   hash: String,
   salt: String,
 });
