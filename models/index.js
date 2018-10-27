@@ -25,6 +25,7 @@ export const Transaction = mongoose.model(
     'Transaction', 
     new mongoose.Schema({
         account: String, 
+        user_id: String,
         company: String,
         source_account: String,
         destination_account: String,

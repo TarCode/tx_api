@@ -249,10 +249,10 @@ export const getTransactions = async (req, res) => {
 
 export const createCredit = async (req, res) => {
     const { account, amount } = req.body
-    const { company } = req.payload
+    const { company, id } = req.payload
 
     try {
-      const tx = await credit(account, amount, company);
+      const tx = await credit(account, amount, company, id);
       
       return res.send({
         status: 'success',
@@ -268,10 +268,10 @@ export const createCredit = async (req, res) => {
 
 export const createDebit = async (req, res) => {
   const { account, amount } = req.body
-  const { company } = req.payload
+  const { company, id } = req.payload
 
   try {
-    const tx = await debit(account, amount, company);
+    const tx = await debit(account, amount, company, id);
     return res.send({
       status: 'success',
       data: tx
@@ -285,7 +285,7 @@ export const createDebit = async (req, res) => {
 }
 
 // Transaction methods
-const debit = async (account, amount, company) => {
+const debit = async (account, amount, company, user_id) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -293,11 +293,16 @@ const debit = async (account, amount, company) => {
 
     const A = await Account.findOneAndUpdate(
       { 
-        name: account 
+        name: account,
+        company
       }, 
       { 
         $inc: { balance: -amount } 
       }, opts);
+
+    if (!A) {
+      throw new Error('No account found ');
+    }
 
     if (A.balance < 0) {
       throw new Error('Insufficient funds: ' + (A.balance + amount));
@@ -308,6 +313,7 @@ const debit = async (account, amount, company) => {
       type: 'debit', 
       amount,
       company,
+      user_id,
       created: new Date() 
     }, opts)
 
@@ -321,16 +327,33 @@ const debit = async (account, amount, company) => {
   }
 }
 
-const credit = async (account, amount, company) => {
+const credit = async (account, amount, company, user_id) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
     const A = await Account.
-      findOneAndUpdate({ name: account }, { $inc: { balance: amount } });
+      findOneAndUpdate({ name: account, company }, { $inc: { balance: amount } });
+
+      if (!A) {
+        throw new Error('No account found ');
+      }
 
       const tx = await Transaction.create({ 
         account, 
         type: 'credit', 
-        amount, 
+        amount,
+        user_id,
         company, 
         created: new Date() 
       })
-    return tx;
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return tx;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
 }
