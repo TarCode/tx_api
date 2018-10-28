@@ -11,7 +11,7 @@ import {
     registerCompany,
     register,
     login,
-    currentUser
+    getUsers
 } from '../controllers'
 
 const app = express()
@@ -32,7 +32,7 @@ app.post('/auth/register', auth.optional, register);
 app.post('/auth/login', auth.optional, login);
   
 // protected methods
-app.get('/current', auth.required, currentUser);
+app.get('/admin/users', auth.required, getUsers);
 
 app.get('/accounts', auth.required, getAccounts)
 app.post('/accounts', auth.required, createAccount)

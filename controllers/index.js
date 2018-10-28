@@ -169,14 +169,36 @@ export const login = (req, res, next) => {
   })(req, res, next);
 }
 
-export const currentUser = async (req, res) => {
-  const { payload: { id } } = req;
+export const getUsers = async (req, res) => {
+  const { payload: { id, email, company } } = req;
   
-  const user = await User.findById(id);
+  const found_company = await Company.findOne({ name: company });
+
+  console.log("FOOUND COMPANY", found_company);
+  console.log("ID AND EMAIL", id, email, company);
+
   
-  if(!user) {
-      return res.sendStatus(400);
+  if (found_company && found_company.owner === email) {
+    const users = await User.find({ company });
+
+    const filtered_users = users.map(user => ({
+      _id: user._id,
+      email: user.email,
+      company: user.company
+    }))
+    return res.send({
+      status: 'success',
+      data: filtered_users
+    })
+  } else {
+    return res.send({
+      status: 'error',
+      msg: 'Error getting users.'
+    })
   }
+  
+  
+  
 
   return res.json({ user: user.toAuthJSON() });
 }
