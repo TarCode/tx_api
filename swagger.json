@@ -33,17 +33,17 @@
       "bearerAuth": []
     },
     "paths": {
-			"/auth/company/register": {
+			"/auth/clan/register": {
         "post": {
             "tags": [
               "User"
             ],
-            "description": "Create new company with an owner in system",
+            "description": "Create new clan with an owner in system",
             "parameters": [
               {
                 "name": "user",
                 "in": "body",
-                "description": "User with company that we want to create",
+                "description": "User with clan that we want to create",
                 "schema": {
                   "$ref": "#/definitions/User"
                 }
@@ -54,9 +54,9 @@
             ],
             "responses": {
               "200": {
-                "description": "New company with owner is created",
+                "description": "New clan with owner is created",
                 "schema": {
-                  "$ref": "#/definitions/Company"
+                  "$ref": "#/definitions/clan"
                 }
               }
             }
@@ -67,7 +67,7 @@
             "tags": [
               "User"
             ],
-            "description": "Create new user within a company",
+            "description": "Create new user within a clan",
             "parameters": [
               {
                 "name": "user",
@@ -96,7 +96,7 @@
             "tags": [
               "User"
             ],
-            "description": "Login user within a company",
+            "description": "Login user within a clan",
             "parameters": [
               {
                 "name": "user",
@@ -120,17 +120,17 @@
             }
           }
       },
-      "/accounts": {
+      "/wallets": {
         "get": {
           "tags": [
-            "Accounts"
+            "wallets"
           ],
-          "summary": "Accounts in system",
+          "summary": "wallets in system",
           "responses": {
             "200": {
               "description": "OK",
               "schema": {
-                "$ref": "#/definitions/Accounts"
+                "$ref": "#/definitions/wallets"
               }
             }
           }
@@ -138,16 +138,16 @@
 
         "post": {
             "tags": [
-              "Accounts"
+              "wallets"
             ],
-            "description": "Create new account in system",
+            "description": "Create new wallet in system",
             "parameters": [
               {
-                "name": "account",
+                "name": "wallet",
                 "in": "body",
-                "description": "Account that we want to create",
+                "description": "wallet that we want to create",
                 "schema": {
-                  "$ref": "#/definitions/Account"
+                  "$ref": "#/definitions/wallet"
                 }
               }
             ],
@@ -156,9 +156,9 @@
             ],
             "responses": {
               "200": {
-                "description": "New account is created",
+                "description": "New wallet is created",
                 "schema": {
-                  "$ref": "#/definitions/Account"
+                  "$ref": "#/definitions/wallet"
                 }
               }
             }
@@ -245,14 +245,14 @@
 			"User": {
 				"required": [
 						"email",
-						"company",
+						"clan",
 						"password"
 				],
 				"properties": {
 						"email": {
 								"type": "string"
 						},
-						"company": {
+						"clan": {
 								"type": "string"
 						},
 						"password": {
@@ -267,7 +267,7 @@
 					}
 			}
 			},
-			"Account": {
+			"wallet": {
         "required": [
           "name"
         ],
@@ -283,11 +283,11 @@
       },
       "Transaction": {
         "required": [
-          "account",
+          "wallet",
           "amount"
         ],
         "properties": {
-          "account": {
+          "wallet": {
             "type": "string"
           },
           "amount": {

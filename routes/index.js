@@ -3,12 +3,13 @@ import mongoose from 'mongoose'
 import auth from './auth'
 
 import { 
-    getAccounts, 
-    createAccount, 
+    getWallets, 
+    createWallet,
+    updateWallet,
     getTransactions,
     createDebit,
     createCredit,
-    registerCompany,
+    registerClan,
     register,
     login,
     getUsers
@@ -27,15 +28,16 @@ import '../config/passport'
 
 
 // public methods
-app.post('/auth/company/register', auth.optional, registerCompany);
+app.post('/auth/clan/register', auth.optional, registerClan);
 app.post('/auth/register', auth.optional, register);
 app.post('/auth/login', auth.optional, login);
   
 // protected methods
 app.get('/admin/users', auth.required, getUsers);
 
-app.get('/accounts', auth.required, getAccounts)
-app.post('/accounts', auth.required, createAccount)
+app.get('/wallets', auth.required, getWallets)
+app.post('/wallets', auth.required, createWallet)
+app.post('/wallets/:id', auth.required, updateWallet)
 
 app.get('/transactions', auth.required, getTransactions)
 app.post('/transactions/debit', auth.required, createDebit)

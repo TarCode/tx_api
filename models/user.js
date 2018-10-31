@@ -6,7 +6,7 @@ const { Schema } = mongoose;
 
 const UsersSchema = new Schema({
   email: {type: String, lowercase: true },
-  company: {type: String, lowercase: true },
+  clan: {type: String, lowercase: true },
   hash: String,
   salt: String,
 });
@@ -28,7 +28,7 @@ UsersSchema.methods.generateJWT = function() {
 
   return jwt.sign({
     email: this.email,
-    company: this.company,
+    clan: this.clan,
     id: this._id,
     exp: parseInt(expirationDate.getTime() / 1000, 10),
   }, 'secret');
@@ -38,7 +38,7 @@ UsersSchema.methods.toAuthJSON = function() {
   return {
     _id: this._id,
     email: this.email,
-    company: this.company,
+    clan: this.clan,
     token: this.generateJWT(),
   };
 };

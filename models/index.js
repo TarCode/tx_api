@@ -3,22 +3,29 @@ import { UserModel } from './user'
 
 export const User = UserModel
 
-export const Company =  mongoose.model(
-    'Company', 
+export const Clan =  mongoose.model(
+    'Clan', 
     new mongoose.Schema({
         name: {type: String, lowercase: true, unique: true }, 
         owner: String
     })
 );
 
-export const Account =  mongoose.model(
-    'Account', 
-    new mongoose.Schema({
-        user_id: String,
-        company: String,
-        name: String, 
-        balance: Number
-    })
+const WalletSchema = new mongoose.Schema({
+    user_id: String,
+    clan: String,
+    name: String, 
+    balance: Number,
+    created: Date,
+    default: Boolean
+});
+
+WalletSchema.index({default: 1}, {unique: true, partialFilterExpression: {default: true}});
+
+
+export const Wallet =  mongoose.model(
+    'Wallet', 
+    WalletSchema
 );
 
 export const Transaction = mongoose.model(
@@ -26,7 +33,7 @@ export const Transaction = mongoose.model(
     new mongoose.Schema({
         account: String, 
         user_id: String,
-        company: String,
+        clan: String,
         source_account: String,
         destination_account: String,
         type: String,
