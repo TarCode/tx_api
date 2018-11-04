@@ -37,12 +37,13 @@ export const UserWallet = mongoose.model(
 export const Transaction = mongoose.model(
     'Transaction', 
     new mongoose.Schema({
-        account: String, 
-        user_id: String,
+        wallet_id: String, 
+        created_by: String,
+        created_for: String,
+        type: String,
         clan: String,
         source_account: String,
         destination_account: String,
-        type: String,
         amount: Number,
         created: Date
     })

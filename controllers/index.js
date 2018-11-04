@@ -115,6 +115,17 @@ export const register = async (req, res) => {
 
   console.log('saved user', savedUser)
 
+  // Find clan's default wallet and create wallet for user
+  const found_default_wallet = await Wallet.findOne({ clan: user.clan, default: true })
+
+  if (found_default_wallet) {
+    const user_wallet = await UserWallet.create({
+      user_id: savedUser._id,
+      balance: 0,
+      wallet_id: found_default_wallet._id
+     })
+  }
+
   return res.json({ user: finalUser.toAuthJSON() })
 }
 
@@ -171,6 +182,8 @@ export const adminGetUsers = async (req, res) => {
   
   const found_clan = await Clan.findOne({ name: clan });
 
+  console.log("FOIUND CLAN", email);
+  
   
   if (found_clan && found_clan.owner === email) {
     const users = await User.find({ clan });
@@ -180,6 +193,7 @@ export const adminGetUsers = async (req, res) => {
       email: user.email,
       clan: user.clan
     }))
+
     return res.send({
       status: 'success',
       data: filtered_users
@@ -187,7 +201,7 @@ export const adminGetUsers = async (req, res) => {
   } else {
     return res.send({
       status: 'error',
-      msg: 'Error getting users.'
+      msg: 'Unauthorized: Error getting users.'
     })
   }
 }
@@ -228,12 +242,13 @@ export const adminGetWallets = async (req, res) => {
       
       return data
     })
-
-    console.log("WALLETS WITH NAMES", user_wallets_with_name);
     
     return res.send({
       status: 'success',
-      data: user_wallets_with_name
+      data: {
+        user_wallets: user_wallets_with_name,
+        clan_wallets
+      }
     })
   } catch (error) {
     return res.send({
@@ -321,11 +336,11 @@ export const adminGetTransactions = async (req, res) => {
 }
 
 export const adminCreateCredit = async (req, res) => {
-    const { wallet, amount } = req.body
+    const { wallet_id, amount, user_id } = req.body
     const { clan, id } = req.payload
 
     try {
-      const tx = await credit(wallet, amount, clan, id);
+      const tx = await credit(wallet_id, amount, clan, user_id, id);
       
       return res.send({
         status: 'success',
@@ -340,11 +355,11 @@ export const adminCreateCredit = async (req, res) => {
 }
 
 export const adminCreateDebit = async (req, res) => {
-  const { wallet, amount } = req.body
+  const { wallet_id, amount, user_id } = req.body
   const { clan, id } = req.payload
 
   try {
-    const tx = await debit(wallet, amount, clan, id);
+    const tx = await debit(wallet_id, amount, clan, user_id, id);
     return res.send({
       status: 'success',
       data: tx
@@ -358,16 +373,16 @@ export const adminCreateDebit = async (req, res) => {
 }
 
 // Transaction methods
-const debit = async (wallet, amount, clan, user_id) => {
+const debit = async (wallet_id, amount, clan, user_id, id) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
     const opts = { session, new: true };
 
-    const A = await Wallet.findOneAndUpdate(
+    const A = await UserWallet.findOneAndUpdate(
       { 
-        name: wallet,
-        clan
+        user_id: user_id,
+        wallet_id: wallet_id
       }, 
       { 
         $inc: { balance: -amount } 
@@ -382,11 +397,12 @@ const debit = async (wallet, amount, clan, user_id) => {
     }
 
     const tx = await Transaction.create({ 
-      wallet: wallet, 
+      wallet_id, 
+      created_by: id,
+      created_for: user_id,
       type: 'debit', 
       amount,
       clan,
-      user_id,
       created: new Date() 
     }, opts)
 
@@ -400,12 +416,12 @@ const debit = async (wallet, amount, clan, user_id) => {
   }
 }
 
-const credit = async (wallet, amount, clan, user_id) => {
+const credit = async (wallet_id, amount, clan, user_id, id) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-      const A = await Wallet.findOneAndUpdate(
-        { name: wallet, clan }, 
+      const A = await UserWallet.findOneAndUpdate(
+        { user_id, wallet_id }, 
         { $inc: { balance: amount } }
       );
 
@@ -414,11 +430,12 @@ const credit = async (wallet, amount, clan, user_id) => {
       }
 
       const tx = await Transaction.create({ 
-        wallet, 
+        wallet_id, 
+        created_by: id,
+        created_for: user_id,
         type: 'credit', 
-        amount,
-        user_id,
         clan, 
+        amount,
         created: new Date() 
       })
 
