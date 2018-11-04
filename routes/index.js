@@ -3,16 +3,16 @@ import mongoose from 'mongoose'
 import auth from './auth'
 
 import { 
-    getWallets, 
-    createWallet,
-    updateWallet,
-    getTransactions,
-    createDebit,
-    createCredit,
+    adminGetWallets, 
+    adminCreateWallet,
+    adminUpdateWallet,
+    adminGetTransactions,
+    adminCreateDebit,
+    adminCreateCredit,
     registerClan,
     register,
     login,
-    getUsers
+    adminGetUsers
 } from '../controllers'
 
 const app = express()
@@ -32,16 +32,15 @@ app.post('/auth/clan/register', auth.optional, registerClan);
 app.post('/auth/register', auth.optional, register);
 app.post('/auth/login', auth.optional, login);
   
-// protected methods
-app.get('/admin/users', auth.required, getUsers);
+// protected admin methods
+app.get('/admin/users', auth.required, adminGetUsers);
+app.get('/admin/wallets', auth.required, adminGetWallets)
+app.post('/admin/wallets', auth.required, adminCreateWallet)
+app.post('/admin/wallets/:id', auth.required, adminUpdateWallet)
 
-app.get('/wallets', auth.required, getWallets)
-app.post('/wallets', auth.required, createWallet)
-app.post('/wallets/:id', auth.required, updateWallet)
-
-app.get('/transactions', auth.required, getTransactions)
-app.post('/transactions/debit', auth.required, createDebit)
-app.post('/transactions/credit', auth.required, createCredit)
+app.get('/admin/transactions', auth.required, adminGetTransactions)
+app.post('/admin/transactions/debit', auth.required, adminCreateDebit)
+app.post('/admin/transactions/credit', auth.required, adminCreateCredit)
 
 
 module.exports = app;

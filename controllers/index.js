@@ -104,11 +104,16 @@ export const register = async (req, res) => {
     })
   }
 
+  // Create new user
   const finalUser = new User(user);
 
+  // Set new user's password
   finalUser.setPassword(user.password);
 
+  // Save user
   const savedUser = await finalUser.save()
+
+  console.log('saved user', savedUser)
 
   return res.json({ user: finalUser.toAuthJSON() })
 }
@@ -161,7 +166,7 @@ export const login = (req, res, next) => {
   })(req, res, next);
 }
 
-export const getUsers = async (req, res) => {
+export const adminGetUsers = async (req, res) => {
   const { payload: { id, email, clan } } = req;
   
   const found_clan = await Clan.findOne({ name: clan });
@@ -187,7 +192,7 @@ export const getUsers = async (req, res) => {
   }
 }
 
-export const getWallets = async (req, res) => {
+export const adminGetWallets = async (req, res) => {
   try {
     const wallets = await Wallet.find({
       clan: req.payload.clan
@@ -204,7 +209,7 @@ export const getWallets = async (req, res) => {
   }  
 }
 
-export const createWallet = async (req, res) => {
+export const adminCreateWallet = async (req, res) => {
   const { name } = req.body
   const { id, clan } = req.payload
   try {
@@ -214,7 +219,7 @@ export const createWallet = async (req, res) => {
       if (found_wallet) {
         return res.send({
           status: 'error',
-          msg: 'An wallet with this name already exists.'
+          msg: 'A wallet with this name already exists.'
         });
       } else {
         const wallet = await Wallet.create({
@@ -239,7 +244,7 @@ export const createWallet = async (req, res) => {
   }
 }
 
-export const updateWallet = async (req, res) => {
+export const adminUpdateWallet = async (req, res) => {
   const { id, clan } = req.payload
   try {
     const set_prev_default_wallet_to_false = await Wallet.updateOne({ default: true, user_id: id }, { $set: { default: false }})
@@ -257,7 +262,7 @@ export const updateWallet = async (req, res) => {
   }
 }
 
-export const getTransactions = async (req, res) => {
+export const adminGetTransactions = async (req, res) => {
   try {
     const transactions = await Transaction.find({
       clan: req.payload.clan
@@ -274,7 +279,7 @@ export const getTransactions = async (req, res) => {
   }  
 }
 
-export const createCredit = async (req, res) => {
+export const adminCreateCredit = async (req, res) => {
     const { wallet, amount } = req.body
     const { clan, id } = req.payload
 
@@ -293,7 +298,7 @@ export const createCredit = async (req, res) => {
     }
 }
 
-export const createDebit = async (req, res) => {
+export const adminCreateDebit = async (req, res) => {
   const { wallet, amount } = req.body
   const { clan, id } = req.payload
 
