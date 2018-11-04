@@ -113,7 +113,6 @@ export const register = async (req, res) => {
   // Save user
   const savedUser = await finalUser.save()
 
-  console.log('saved user', savedUser)
 
   // Find clan's default wallet and create wallet for user
   const found_default_wallet = await Wallet.findOne({ clan: user.clan, default: true })
@@ -181,8 +180,6 @@ export const adminGetUsers = async (req, res) => {
   const { payload: { id, email, clan } } = req;
   
   const found_clan = await Clan.findOne({ name: clan });
-
-  console.log("FOIUND CLAN", email);
   
   
   if (found_clan && found_clan.owner === email) {
@@ -238,7 +235,6 @@ export const adminGetWallets = async (req, res) => {
         name: wallet_names[w.wallet_id].name,
         default: wallet_names[w.wallet_id].default
       }
-      console.log("WALLET ID",data);
       
       return data
     })
@@ -337,37 +333,71 @@ export const adminGetTransactions = async (req, res) => {
 
 export const adminCreateCredit = async (req, res) => {
     const { wallet_id, amount, user_id } = req.body
-    const { clan, id } = req.payload
+    const { clan, id, email } = req.payload
 
-    try {
-      const tx = await credit(wallet_id, amount, clan, user_id, id);
-      
-      return res.send({
-        status: 'success',
-        data: tx
-      })
-    } catch (error) {
+  
+   try {
+    const found_clan = await Clan.findOne({ name: clan });
+
+    if (found_clan && found_clan.owner === email) {
+      try {
+        const tx = await credit(wallet_id, amount, clan, user_id, id);
+        
+        return res.send({
+          status: 'success',
+          data: tx
+        })
+      } catch (error) {
+        return res.send({
+          status: 'error',
+          msg: error.message
+        });
+      }
+    } else {
       return res.send({
         status: 'error',
-        msg: error.message
+        msg: "Unauthorized: Cannot create transaction"
       });
     }
+   } catch (err) {
+    return res.send({
+      status: 'error',
+      msg: "Unauthorized: Cannot create transaction"
+    });
+   }
+    
 }
 
 export const adminCreateDebit = async (req, res) => {
   const { wallet_id, amount, user_id } = req.body
-  const { clan, id } = req.payload
-
+  const { clan, id, email } = req.payload
+  
   try {
-    const tx = await debit(wallet_id, amount, clan, user_id, id);
-    return res.send({
-      status: 'success',
-      data: tx
-    })
-  } catch (error) {
+    const found_clan = await Clan.findOne({ name: clan });
+
+    if (found_clan && found_clan.owner === email) {
+      try {
+        const tx = await debit(wallet_id, amount, clan, user_id, id);
+        return res.send({
+          status: 'success',
+          data: tx
+        })
+      } catch (error) {
+        return res.send({
+          status: 'error',
+          msg: error.message
+        });
+      }
+    } else {
+      return res.send({
+        status: 'error',
+        msg: "Unauthorized: Cannot create transaction"
+      });
+    }
+  } catch (err) {
     return res.send({
       status: 'error',
-      msg: error.message
+      msg: "Unauthorized: Cannot create transaction"
     });
   }
 }
