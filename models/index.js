@@ -12,20 +12,26 @@ export const Clan =  mongoose.model(
 );
 
 const WalletSchema = new mongoose.Schema({
-    user_id: String,
     clan: String,
-    name: String, 
-    balance: Number,
+    name: String,
     created: Date,
-    default: Boolean
+    default: Boolean,
 });
 
-WalletSchema.index({default: 1}, {unique: true, partialFilterExpression: {default: true}});
-
+WalletSchema.index({default: 1, clan: 1 }, {unique: true, partialFilterExpression: {default: true}});
 
 export const Wallet =  mongoose.model(
     'Wallet', 
     WalletSchema
+);
+
+export const UserWallet = mongoose.model(
+    'UserWallet', 
+    new mongoose.Schema({
+        balance: Number,
+        user_id: String,
+        wallet_id: String
+    })
 );
 
 export const Transaction = mongoose.model(

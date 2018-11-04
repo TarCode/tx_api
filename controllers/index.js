@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 import passport from 'passport'
 import { ObjectID } from 'mongodb'
 
-import { Wallet, Transaction, User, Clan } from '../models'
+import { Wallet, UserWallet, Transaction, User, Clan } from '../models'
 
 export const registerClan = async (req, res) => {
   const user = {
@@ -194,12 +194,46 @@ export const adminGetUsers = async (req, res) => {
 
 export const adminGetWallets = async (req, res) => {
   try {
-    const wallets = await Wallet.find({
+    const clan_wallets = await Wallet.find({
       clan: req.payload.clan
     });
+
+    const wallet_names = {}
+    
+    clan_wallets.map(w => {
+      wallet_names[w._id.toString()] = {
+        name: w.name,
+        default: w.default
+      }
+
+    })
+
+    const wallet_ids = clan_wallets.map(c => c._id)
+
+    const user_wallets = await UserWallet.find({
+      wallet_id: { $in: wallet_ids }
+    })
+
+    
+
+    const user_wallets_with_name = user_wallets.map(w => {
+      const data = {
+        user_id: w.user_id,
+        balance: w.balance,
+        wallet_id: w.wallet_id,
+        name: wallet_names[w.wallet_id].name,
+        default: wallet_names[w.wallet_id].default
+      }
+      console.log("WALLET ID",data);
+      
+      return data
+    })
+
+    console.log("WALLETS WITH NAMES", user_wallets_with_name);
+    
     return res.send({
       status: 'success',
-      data: wallets
+      data: user_wallets_with_name
     })
   } catch (error) {
     return res.send({
@@ -214,7 +248,7 @@ export const adminCreateWallet = async (req, res) => {
   const { id, clan } = req.payload
   try {
       const found_wallet = await Wallet.findOne({ name, clan })
-      const found_default = await Wallet.findOne({ clan, user_id: id, default: true })
+      const found_default = await Wallet.findOne({ clan, default: true })
 
       if (found_wallet) {
         return res.send({
@@ -222,14 +256,21 @@ export const adminCreateWallet = async (req, res) => {
           msg: 'A wallet with this name already exists.'
         });
       } else {
+
         const wallet = await Wallet.create({
           name, 
-          user_id: id, 
           clan,
           created: new Date(),
-          default: !found_default ? true : false,
-          balance: 0 
+          // default: !found_default ? true : null
+          
        });
+
+
+       const user_wallet = await UserWallet.create({
+        user_id: id,
+        balance: 0,
+        wallet_id: wallet._id
+       })
  
        return res.send({
          status: 'success',
@@ -247,7 +288,7 @@ export const adminCreateWallet = async (req, res) => {
 export const adminUpdateWallet = async (req, res) => {
   const { id, clan } = req.payload
   try {
-    const set_prev_default_wallet_to_false = await Wallet.updateOne({ default: true, user_id: id }, { $set: { default: false }})
+    const set_prev_default_wallet_to_false = await Wallet.updateOne({ default: true, clan }, { $set: { default: false }})
     const update_wallet = await Wallet.updateOne({ _id: ObjectID(req.params.id), clan }, { $set: { default: true }})
       
     return res.send({
