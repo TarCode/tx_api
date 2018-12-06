@@ -1,6 +1,8 @@
 # Transaction API
 
-API using MongoDB 4 transactions. Create wallets/accounts, credit and debit.
+API demonstrating MongoDB 4 transactions. Create wallets/accounts, credit and debit.
+
+JWT passport authentication included.
 
 Requires MongoDB 4.
 
