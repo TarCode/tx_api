@@ -2,12 +2,12 @@ import mongoose from 'mongoose'
 import passport from 'passport'
 import { ObjectID } from 'mongodb'
 
-import { Wallet, UserWallet, Transaction, User, Clan } from '../models'
+import { Wallet, UserWallet, Transaction, User, Company } from '../models'
 
-export const registerClan = async (req, res) => {
+export const registerCompany = async (req, res) => {
   const user = {
     email: req.body.email,
-    clan: req.body.clan,
+    company: req.body.company,
     password: req.body.password
   }
 
@@ -18,10 +18,10 @@ export const registerClan = async (req, res) => {
     });
   }
 
-  if(!user.clan) {
+  if(!user.company) {
     return res.status(400).send({
       status: 'error',
-      message: 'Clan is required'
+      message: 'Company is required'
     });
   }
 
@@ -33,9 +33,9 @@ export const registerClan = async (req, res) => {
   }
 
   try {
-    const clan = await Clan.findOne({ name: user.clan });
-    if (!clan) {
-      const created_clan = await Clan.create({ name: user.clan, owner: user.email });
+    const company = await Company.findOne({ name: user.company });
+    if (!company) {
+      const created_company = await Company.create({ name: user.company, owner: user.email });
       
       const finalUser = await new User(user);
       
@@ -43,11 +43,11 @@ export const registerClan = async (req, res) => {
     
       await finalUser.save()
 
-      return res.json({ user: finalUser.toAuthJSON(), clan: created_clan })
+      return res.json({ user: finalUser.toAuthJSON(), company: created_company })
     } else {
       return res.send({
         status: 'error',
-        msg: "Clan already exists"
+        msg: "Company already exists"
       })
     }
   } catch (error) {
@@ -61,7 +61,7 @@ export const registerClan = async (req, res) => {
 export const register = async (req, res) => {
   const user = {
     email: req.body.email,
-    clan: req.body.clan,
+    company: req.body.company,
     password: req.body.password
   }
 
@@ -72,10 +72,10 @@ export const register = async (req, res) => {
     });
   }
 
-  if(!user.clan) {
+  if(!user.company) {
     return res.status(400).send({
       status: 'error',
-      message: 'Clan is required'
+      message: 'Company is required'
     });
   }
 
@@ -86,14 +86,14 @@ export const register = async (req, res) => {
     });
   }
 
-  const clan = await Clan.findOne({ name: user.clan });
+  const company = await Company.findOne({ name: user.company });
 
-  const found_user = await User.findOne({ email: user.email, clan: user.clan })
+  const found_user = await User.findOne({ email: user.email, company: user.company })
   
-  if (!clan) {
+  if (!company) {
     return res.send({
       status: 'error',
-      msg: "Clan does not exist"
+      msg: "Company does not exist"
     })
   }
 
@@ -114,8 +114,8 @@ export const register = async (req, res) => {
   const savedUser = await finalUser.save()
 
 
-  // Find clan's default wallet and create wallet for user
-  const found_default_wallet = await Wallet.findOne({ clan: user.clan, default: true })
+  // Find company's default wallet and create wallet for user
+  const found_default_wallet = await Wallet.findOne({ company: user.company, default: true })
 
   if (found_default_wallet) {
     const user_wallet = await UserWallet.create({
@@ -131,7 +131,7 @@ export const register = async (req, res) => {
 export const login = (req, res, next) => {
   const user = {
     email: req.body.email,
-    clan: req.body.clan,
+    company: req.body.company,
     password: req.body.password
   }
 
@@ -142,10 +142,10 @@ export const login = (req, res, next) => {
     });
   }
 
-  if(!user.clan) {
+  if(!user.company) {
     return res.status(400).send({
       status: 'error',
-      message: 'Clan is required'
+      message: 'Company is required'
     });
   }
 
@@ -176,19 +176,105 @@ export const login = (req, res, next) => {
   })(req, res, next);
 }
 
+// User controllers
+export const userGetWallet = async (req, res, next) => {
+  try {
+    const company_wallet = await Wallet.findOne({
+      company: req.payload.company,
+      default: true
+    });
+
+
+    const user_wallet = await UserWallet.findOne({
+      wallet_id: company_wallet._id,
+      user_id: req.payload.id
+    })
+
+
+    const wallet = {
+      _id: company_wallet._id,
+      user_id: user_wallet.user_id,
+      balance: parseInt(user_wallet.balance, 10),
+      currency_code: company_wallet.currency_code,
+      divisibility: company_wallet.divisibility,
+      user_wallet_id: user_wallet._id,
+      name: company_wallet.name,
+      default: company_wallet.default
+    }
+
+    const transactions = await Transaction.find({
+      user_wallet_id: user_wallet._id
+    });
+    
+    return res.send({
+      status: 'success',
+      data: {
+        wallet,
+        transactions: transactions.reverse()
+      }
+    })
+  } catch (error) {
+    return res.send({
+      status: 'error',
+      msg: error.message
+    })
+  }  
+}
+
+export const userCreateTransfer = async (req, res) => {
+  const { 
+    wallet_id, 
+    amount, 
+    user_id, 
+    currency_code, 
+    divisibility, 
+    user_wallet_id, 
+    recipient 
+  } = req.body
+
+  const { company, id } = req.payload
+
+  const created_for = await User.findOne({ email: recipient })
+
+  console.log("CREATED FOR", created_for);
+
+  if (!created_for) {
+    return res.send({
+      status: 'error',
+      msg: 'Invalid recipient'
+    });
+  }
+  
+
+  try {
+    const tx = await transfer(wallet_id, amount, company, user_id, id, currency_code, divisibility, user_wallet_id, created_for._id);
+    return res.send({
+      status: 'success',
+      data: tx
+    })
+  } catch (error) {
+    return res.send({
+      status: 'error',
+      msg: error.message
+    });
+  }
+}
+
+
+// Admin controllers
 export const adminGetUsers = async (req, res) => {
-  const { payload: { id, email, clan } } = req;
+  const { payload: { id, email, company } } = req;
   
-  const found_clan = await Clan.findOne({ name: clan });
+  const found_company = await Company.findOne({ name: company });
   
   
-  if (found_clan && found_clan.owner === email) {
-    const users = await User.find({ clan });
+  if (found_company && found_company.owner === email) {
+    const users = await User.find({ company });
 
     const filtered_users = users.map(user => ({
       _id: user._id,
       email: user.email,
-      clan: user.clan
+      company: user.company
     }))
 
     return res.send({
@@ -205,21 +291,23 @@ export const adminGetUsers = async (req, res) => {
 
 export const adminGetWallets = async (req, res) => {
   try {
-    const clan_wallets = await Wallet.find({
-      clan: req.payload.clan
+    const company_wallets = await Wallet.find({
+      company: req.payload.company
     });
 
     const wallet_names = {}
     
-    clan_wallets.map(w => {
+    company_wallets.map(w => {
       wallet_names[w._id.toString()] = {
         name: w.name,
-        default: w.default
+        default: w.default,
+        currency_code: w.currency_code,
+        divisibility: w.divisibility
       }
 
     })
 
-    const wallet_ids = clan_wallets.map(c => c._id)
+    const wallet_ids = company_wallets.map(c => c._id)
 
     const user_wallets = await UserWallet.find({
       wallet_id: { $in: wallet_ids }
@@ -229,8 +317,9 @@ export const adminGetWallets = async (req, res) => {
 
     const user_wallets_with_name = user_wallets.map(w => {
       const data = {
+        _id: w._id,
         user_id: w.user_id,
-        balance: w.balance,
+        balance: wallet_names[w.wallet_id].currency_code + (parseInt(w.balance, 10) / Math.pow(10, wallet_names[w.wallet_id].divisibility).toFixed(wallet_names[w.wallet_id].divisibility)),
         wallet_id: w.wallet_id,
         name: wallet_names[w.wallet_id].name,
         default: wallet_names[w.wallet_id].default
@@ -243,7 +332,7 @@ export const adminGetWallets = async (req, res) => {
       status: 'success',
       data: {
         user_wallets: user_wallets_with_name,
-        clan_wallets
+        company_wallets
       }
     })
   } catch (error) {
@@ -255,11 +344,11 @@ export const adminGetWallets = async (req, res) => {
 }
 
 export const adminCreateWallet = async (req, res) => {
-  const { name } = req.body
-  const { id, clan } = req.payload
+  const { name, currency_code, divisibility } = req.body
+  const { id, company } = req.payload
   try {
-      const found_wallet = await Wallet.findOne({ name, clan })
-      const found_default = await Wallet.findOne({ clan, default: true })
+      const found_wallet = await Wallet.findOne({ name, company })
+      const found_default = await Wallet.findOne({ company, default: true })
 
       if (found_wallet) {
         return res.send({
@@ -270,9 +359,11 @@ export const adminCreateWallet = async (req, res) => {
 
         const wallet = await Wallet.create({
           name, 
-          clan,
+          company,
+          currency_code,
+          divisibility,
           created: new Date(),
-          // default: !found_default ? true : null
+          default: !found_default ? true : false
           
        });
 
@@ -297,10 +388,10 @@ export const adminCreateWallet = async (req, res) => {
 }
 
 export const adminUpdateWallet = async (req, res) => {
-  const { id, clan } = req.payload
+  const { id, company } = req.payload
   try {
-    const set_prev_default_wallet_to_false = await Wallet.updateOne({ default: true, clan }, { $set: { default: false }})
-    const update_wallet = await Wallet.updateOne({ _id: ObjectID(req.params.id), clan }, { $set: { default: true }})
+    const set_prev_default_wallet_to_false = await Wallet.updateOne({ default: true, company }, { $set: { default: false }})
+    const update_wallet = await Wallet.updateOne({ _id: ObjectID(req.params.id), company }, { $set: { default: true }})
       
     return res.send({
       status: 'success',
@@ -317,7 +408,7 @@ export const adminUpdateWallet = async (req, res) => {
 export const adminGetTransactions = async (req, res) => {
   try {
     const transactions = await Transaction.find({
-      clan: req.payload.clan
+      company: req.payload.company
     });
     return res.send({
       status: 'success',
@@ -332,16 +423,16 @@ export const adminGetTransactions = async (req, res) => {
 }
 
 export const adminCreateCredit = async (req, res) => {
-    const { wallet_id, amount, user_id } = req.body
-    const { clan, id, email } = req.payload
+    const { wallet_id, amount, user_id, currency_code, divisibility, user_wallet_id } = req.body
+    const { company, id, email } = req.payload
 
   
    try {
-    const found_clan = await Clan.findOne({ name: clan });
+    const found_company = await Company.findOne({ name: company });
 
-    if (found_clan && found_clan.owner === email) {
+    if (found_company && found_company.owner === email) {
       try {
-        const tx = await credit(wallet_id, amount, clan, user_id, id);
+        const tx = await credit(wallet_id, amount, company, user_id, id, currency_code, divisibility, user_wallet_id);
         
         return res.send({
           status: 'success',
@@ -369,15 +460,15 @@ export const adminCreateCredit = async (req, res) => {
 }
 
 export const adminCreateDebit = async (req, res) => {
-  const { wallet_id, amount, user_id } = req.body
-  const { clan, id, email } = req.payload
+  const { wallet_id, amount, user_id, currency_code, divisibility, user_wallet_id } = req.body
+  const { company, id, email } = req.payload
   
   try {
-    const found_clan = await Clan.findOne({ name: clan });
+    const found_company = await Company.findOne({ name: company });
 
-    if (found_clan && found_clan.owner === email) {
+    if (found_company && found_company.owner === email) {
       try {
-        const tx = await debit(wallet_id, amount, clan, user_id, id);
+        const tx = await debit(wallet_id, amount, company, user_id, id, currency_code, divisibility, user_wallet_id);
         return res.send({
           status: 'success',
           data: tx
@@ -402,8 +493,8 @@ export const adminCreateDebit = async (req, res) => {
   }
 }
 
-// Transaction methods
-const debit = async (wallet_id, amount, clan, user_id, id) => {
+// Admin transaction methods
+const debit = async (wallet_id, amount, company, user_id, id, currency_code, divisibility, user_wallet_id) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -432,7 +523,10 @@ const debit = async (wallet_id, amount, clan, user_id, id) => {
       created_for: user_id,
       type: 'debit', 
       amount,
-      clan,
+      company,
+      currency_code,
+      divisibility,
+      user_wallet_id,
       created: new Date() 
     }, opts)
 
@@ -446,7 +540,7 @@ const debit = async (wallet_id, amount, clan, user_id, id) => {
   }
 }
 
-const credit = async (wallet_id, amount, clan, user_id, id) => {
+const credit = async (wallet_id, amount, company, user_id, id, currency_code, divisibility, user_wallet_id) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
@@ -463,8 +557,11 @@ const credit = async (wallet_id, amount, clan, user_id, id) => {
         wallet_id, 
         created_by: id,
         created_for: user_id,
-        type: 'credit', 
-        clan, 
+        type: 'credit',
+        currency_code,
+        divisibility,
+        user_wallet_id,
+        company, 
         amount,
         created: new Date() 
       })
@@ -473,6 +570,79 @@ const credit = async (wallet_id, amount, clan, user_id, id) => {
       session.endSession();
 
       return tx;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+}
+
+const transfer = async (wallet_id, amount, company, user_id, id, currency_code, divisibility, user_wallet_id, created_for) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const opts = { session, new: true };
+
+    const A = await UserWallet.findOneAndUpdate(
+      { 
+        user_id: user_id,
+        wallet_id: wallet_id
+      }, 
+      { 
+        $inc: { balance: -amount } 
+      }, opts);
+
+    if (!A) {
+      throw new Error('No wallet found ');
+    }
+
+    if (A.balance < 0) {
+      throw new Error('Insufficient funds: ' + parseInt(A.balance + parseInt(amount)));
+    }
+
+    const B = await UserWallet.findOneAndUpdate(
+      { 
+        user_id: created_for,
+        wallet_id: wallet_id
+      }, 
+      { 
+        $inc: { balance: amount } 
+      }, opts);
+
+    const created = new Date();
+
+    const tx1 = await Transaction.create({ 
+      wallet_id, 
+      created_by: user_id,
+      created_for: created_for,
+      type: 'debit', 
+      amount,
+      company,
+      currency_code,
+      divisibility,
+      user_wallet_id,
+      created
+    }, opts)
+
+    console.log("USERWALLET ID, SECOND ACCOUNT FOUND", user_wallet_id);
+    
+
+    const tx2 = await Transaction.create({ 
+      wallet_id, 
+      created_by: user_id,
+      created_for: created_for,
+      type: 'credit', 
+      amount,
+      company,
+      currency_code,
+      divisibility,
+      user_wallet_id: B._id,
+      created,
+    }, opts)
+
+    await session.commitTransaction();
+    session.endSession();
+    return {tx1, tx2};
   } catch (error) {
     await session.abortTransaction();
     session.endSession();

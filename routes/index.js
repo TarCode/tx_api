@@ -9,10 +9,13 @@ import {
     adminGetTransactions,
     adminCreateDebit,
     adminCreateCredit,
-    registerClan,
+    registerCompany,
     register,
     login,
-    adminGetUsers
+    adminGetUsers,
+
+    userGetWallet,
+    userCreateTransfer
 } from '../controllers'
 
 const app = express()
@@ -28,7 +31,7 @@ import '../config/passport'
 
 
 // public methods
-app.post('/auth/clan/register', auth.optional, registerClan);
+app.post('/auth/company/register', auth.optional, registerCompany);
 app.post('/auth/register', auth.optional, register);
 app.post('/auth/login', auth.optional, login);
   
@@ -41,6 +44,10 @@ app.post('/admin/wallets/:id', auth.required, adminUpdateWallet)
 app.get('/admin/transactions', auth.required, adminGetTransactions)
 app.post('/admin/transactions/debit', auth.required, adminCreateDebit)
 app.post('/admin/transactions/credit', auth.required, adminCreateCredit)
+
+//  Protected user methods
+app.get('/user/wallet', auth.required, userGetWallet)
+app.post('/user/transactions/transfer', auth.required, userCreateTransfer)
 
 
 module.exports = app;
