@@ -6,6 +6,8 @@ JWT passport authentication included.
 
 Requires MongoDB 4.
 
+Client side dashboard app [here](https://github.com/TarCode/tx_dashboard).
+
 ## To run
 
 Run a MongoDB 4 replica set:
