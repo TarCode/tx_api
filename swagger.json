@@ -33,17 +33,17 @@
       "bearerAuth": []
     },
     "paths": {
-			"/auth/clan/register": {
+			"/auth/company/register": {
         "post": {
             "tags": [
               "User"
             ],
-            "description": "Create new clan with an owner in system",
+            "description": "Create new company with an owner in system",
             "parameters": [
               {
                 "name": "user",
                 "in": "body",
-                "description": "User with clan that we want to create",
+                "description": "User with company that we want to create",
                 "schema": {
                   "$ref": "#/definitions/User"
                 }
@@ -54,9 +54,9 @@
             ],
             "responses": {
               "200": {
-                "description": "New clan with owner is created",
+                "description": "New company with owner is created",
                 "schema": {
-                  "$ref": "#/definitions/clan"
+                  "$ref": "#/definitions/company"
                 }
               }
             }
@@ -67,7 +67,7 @@
             "tags": [
               "User"
             ],
-            "description": "Create new user within a clan",
+            "description": "Create new user within a company",
             "parameters": [
               {
                 "name": "user",
@@ -96,7 +96,7 @@
             "tags": [
               "User"
             ],
-            "description": "Login user within a clan",
+            "description": "Login user within a company",
             "parameters": [
               {
                 "name": "user",
@@ -245,14 +245,14 @@
 			"User": {
 				"required": [
 						"email",
-						"clan",
+						"company",
 						"password"
 				],
 				"properties": {
 						"email": {
 								"type": "string"
 						},
-						"clan": {
+						"company": {
 								"type": "string"
 						},
 						"password": {
